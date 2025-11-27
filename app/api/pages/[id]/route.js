@@ -4,9 +4,20 @@ import { ObjectId } from "mongodb"
 
 export async function GET(request, { params }) {
   try {
+    const token = getTokenFromRequest(request)
+    if (!token) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const decoded = verifyToken(token)
+    if (!decoded) {
+      return Response.json({ error: "Invalid token" }, { status: 401 })
+    }
+
     const { db } = await connectToDatabase()
     const page = await db.collection("pages").findOne({
       _id: new ObjectId(params.id),
+      userId: new ObjectId(decoded.userId),
     })
 
     if (!page) {
@@ -15,7 +26,7 @@ export async function GET(request, { params }) {
 
     return Response.json({ page })
   } catch (error) {
-    console.error("Get page error:", error)
+    console.error("[v0] Get page error:", error)
     return Response.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -37,9 +48,10 @@ export async function PUT(request, { params }) {
 
     const page = await db.collection("pages").findOne({
       _id: new ObjectId(params.id),
+      userId: new ObjectId(decoded.userId),
     })
 
-    if (!page || page.userId.toString() !== decoded.userId) {
+    if (!page) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -79,9 +91,10 @@ export async function DELETE(request, { params }) {
 
     const page = await db.collection("pages").findOne({
       _id: new ObjectId(params.id),
+      userId: new ObjectId(decoded.userId),
     })
 
-    if (!page || page.userId.toString() !== decoded.userId) {
+    if (!page) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
