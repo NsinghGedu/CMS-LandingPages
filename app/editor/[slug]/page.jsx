@@ -16,16 +16,12 @@ export default function EditorPage({ params }) {
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        // Ensure slug is available
+
         if (!slug) {
-          console.log("[v0] Slug not available yet")
           return
         }
 
-        console.log("[v0] Loading page with slug:", slug)
-
         const token = authStorage.getToken()
-        console.log("[v0] Token exists:", !!token)
 
         if (!token) {
           setError("Not authenticated")
@@ -34,7 +30,6 @@ export default function EditorPage({ params }) {
         }
 
         const url = `/api/pages/slug/${slug}`
-        console.log("[v0] Fetching from:", url)
 
         const response = await fetch(url, {
           method: "GET",
@@ -44,21 +39,15 @@ export default function EditorPage({ params }) {
           },
         })
 
-        console.log("[v0] Fetch response status:", response.status)
-        console.log("[v0] Response URL:", response.url)
-
         if (response.ok) {
           const data = await response.json()
-          console.log("[v0] Page loaded successfully:", data.page)
           setPage(data.page)
         } else {
           const errorData = await response.json().catch(() => ({}))
-          console.log("[v0] Error response:", response.status, errorData)
           setError(errorData.error || `Failed to load page (${response.status})`)
           setTimeout(() => router.push("/dashboard/pages"), 2000)
         }
       } catch (error) {
-        console.error("[v0] Error fetching page:", error)
         setError("Error fetching page: " + error.message)
       } finally {
         setIsLoading(false)

@@ -79,7 +79,6 @@ export function PageEditor({ initialPage }) {
 
   const publishPage = async () => {
     setIsSaving(true)
-
     try {
       const token = authStorage.getToken()
       const response = await fetch(`/api/pages/slug/${page.slug}/publish`, {

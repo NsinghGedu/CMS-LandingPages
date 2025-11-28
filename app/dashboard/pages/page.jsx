@@ -74,12 +74,12 @@ export default function PagesPage() {
     }
   }
 
-  const handleDeletePage = async (pageId) => {
+  const handleDeletePage = async (slug) => {
     if (!confirm("Are you sure you want to delete this page?")) return
 
     try {
       const token = authStorage.getToken()
-      const response = await fetch(`/api/pages/slug/${pageId}`, {
+      const response = await fetch(`/api/pages/slug/${slug}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -190,7 +190,7 @@ export default function PagesPage() {
                   Edit
                 </Link>
                 <button
-                  onClick={() => handleDeletePage(page._id)}
+                  onClick={() => handleDeletePage(page.slug)}
                   className="px-4 py-2 bg-destructive/10 text-destructive rounded-md hover:bg-destructive/20 font-medium text-sm"
                 >
                   Delete

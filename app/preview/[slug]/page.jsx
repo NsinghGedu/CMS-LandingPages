@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { use } from "react"
 import Link from "next/link"
 import { PageRenderer } from "@/components/page-renderer"
+import { authStorage } from "@/lib/storage"
+
 
 export default function PreviewPage({ params }) {
   const { slug } = use(params)
@@ -13,22 +15,23 @@ export default function PreviewPage({ params }) {
 
   useEffect(() => {
     const fetchPage = async () => {
+      const token = authStorage.getToken()
       try {
-        console.log("[v0] Fetching preview page with slug:", slug)
-        const response = await fetch(`/api/pages/preview/${slug}`)
-        console.log("[v0] Preview response status:", response.status)
-
+        const url = `/api/pages/slug/${slug}`
+       const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         if (response.ok) {
           const data = await response.json()
-          console.log("[v0] Page data received:", !!data.page)
-          setPage(data.page)
+          setPage(data.page) 
         } else {
           const errorData = await response.json()
-          console.log("[v0] Preview error:", errorData)
           setError("Failed to load page")
         }
       } catch (error) {
-        console.error("[v0] Error fetching page:", error)
         setError(error.message)
       } finally {
         setIsLoading(false)
