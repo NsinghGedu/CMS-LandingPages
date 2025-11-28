@@ -50,7 +50,7 @@ export function PageEditor({ initialPage }) {
 
     try {
       const token = authStorage.getToken()
-      const response = await fetch(`/api/pages/${page._id}`, {
+      const response = await fetch(`/api/pages/slug/${page.slug}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -82,8 +82,8 @@ export function PageEditor({ initialPage }) {
 
     try {
       const token = authStorage.getToken()
-      const response = await fetch(`/api/pages/${page._id}`, {
-        method: "PUT",
+      const response = await fetch(`/api/pages/slug/${page.slug}/publish`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -129,7 +129,7 @@ export function PageEditor({ initialPage }) {
           <div className="flex items-center gap-3">
             {saveStatus && <span className="text-sm text-green-600 dark:text-green-400">{saveStatus}</span>}
             <Link
-              href={`/preview/${page._id}`}
+              href={`/preview/${page.slug}`}
               target="_blank"
               className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 font-medium"
             >

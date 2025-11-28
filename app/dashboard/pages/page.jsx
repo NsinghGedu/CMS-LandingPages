@@ -79,7 +79,7 @@ export default function PagesPage() {
 
     try {
       const token = authStorage.getToken()
-      const response = await fetch(`/api/pages/${pageId}`, {
+      const response = await fetch(`/api/pages/slug/${pageId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -184,7 +184,7 @@ export default function PagesPage() {
 
               <div className="flex gap-2">
                 <Link
-                  href={`/editor/${page._id}`}
+                  href={`/editor/${page.slug}`}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 font-medium text-sm"
                 >
                   Edit
