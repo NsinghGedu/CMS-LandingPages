@@ -1,15 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { use } from "react"
 import Link from "next/link"
 import { PageRenderer } from "@/components/page-renderer"
 
-export default function PreviewPage() {
+export default function PreviewPage({ params }) {
+  const { slug } = use(params)
   const [page, setPage] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { slug } = useParams()
 
   useEffect(() => {
     const fetchPage = async () => {

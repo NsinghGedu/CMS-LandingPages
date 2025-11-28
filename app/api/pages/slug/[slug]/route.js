@@ -4,7 +4,8 @@ import { ObjectId } from "mongodb"
 
 export async function GET(request, { params }) {
   try {
-    console.log("[v0] GET /api/pages/slug - params:", params)
+    const { slug } = await params
+    console.log("[v0] GET /api/pages/slug - slug:", slug)
 
     const token = getTokenFromRequest(request)
     console.log("[v0] Token from request:", !!token)
@@ -26,11 +27,11 @@ export async function GET(request, { params }) {
     console.log("[v0] Connected to database")
 
     // Ensure slug is a string
-    const slug = String(params.slug)
-    console.log("[v0] Looking for page with slug:", slug, "and userId:", decoded.userId)
+    const slugStr = String(slug)
+    console.log("[v0] Looking for page with slug:", slugStr, "and userId:", decoded.userId)
 
     const page = await db.collection("pages").findOne({
-      slug: slug,
+      slug: slugStr,
       userId: new ObjectId(decoded.userId),
     })
 
@@ -49,6 +50,8 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const { slug } = await params
+
     const token = getTokenFromRequest(request)
     if (!token) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
@@ -62,10 +65,10 @@ export async function PUT(request, { params }) {
     const { db } = await connectToDatabase()
     const { title, description, components, published } = await request.json()
 
-    const slug = String(params.slug)
+    const slugStr = String(slug)
 
     const page = await db.collection("pages").findOne({
-      slug: slug,
+      slug: slugStr,
       userId: new ObjectId(decoded.userId),
     })
 
@@ -74,7 +77,7 @@ export async function PUT(request, { params }) {
     }
 
     const result = await db.collection("pages").updateOne(
-      { slug: slug },
+      { slug: slugStr },
       {
         $set: {
           title: title || page.title,
@@ -95,6 +98,8 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { slug } = await params
+
     const token = getTokenFromRequest(request)
     if (!token) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
@@ -107,10 +112,10 @@ export async function DELETE(request, { params }) {
 
     const { db } = await connectToDatabase()
 
-    const slug = String(params.slug)
+    const slugStr = String(slug)
 
     const page = await db.collection("pages").findOne({
-      slug: slug,
+      slug: slugStr,
       userId: new ObjectId(decoded.userId),
     })
 
@@ -118,7 +123,7 @@ export async function DELETE(request, { params }) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await db.collection("pages").deleteOne({ slug: slug })
+    await db.collection("pages").deleteOne({ slug: slugStr })
 
     return Response.json({ message: "Page deleted successfully" })
   } catch (error) {

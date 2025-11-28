@@ -1,27 +1,27 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { use } from "react"
+import { useRouter } from "next/navigation"
 import { PageEditor } from "@/components/page-editor"
 import { authStorage } from "@/lib/storage"
 
-export default function EditorPage() {
+export default function EditorPage({ params }) {
+  const { slug } = use(params)
   const [page, setPage] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const params = useParams()
   const router = useRouter()
 
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        // Ensure params is available and get slug
-        if (!params || !params.slug) {
+        // Ensure slug is available
+        if (!slug) {
           console.log("[v0] Slug not available yet")
           return
         }
 
-        const slug = params.slug
         console.log("[v0] Loading page with slug:", slug)
 
         const token = authStorage.getToken()
@@ -66,7 +66,7 @@ export default function EditorPage() {
     }
 
     fetchPage()
-  }, [params, router])
+  }, [slug, router])
 
   if (isLoading) {
     return (

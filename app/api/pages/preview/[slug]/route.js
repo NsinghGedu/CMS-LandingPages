@@ -2,17 +2,18 @@ import { connectToDatabase } from "@/lib/mongodb"
 
 export async function GET(request, { params }) {
   try {
-    console.log("[v0] GET /api/pages/preview - params:", params)
+    const { slug } = await params
+    console.log("[v0] GET /api/pages/preview - slug:", slug)
 
     const { db } = await connectToDatabase()
     console.log("[v0] Connected to database")
 
     // Ensure slug is a string
-    const slug = String(params.slug)
-    console.log("[v0] Looking for published page with slug:", slug)
+    const slugStr = String(slug)
+    console.log("[v0] Looking for published page with slug:", slugStr)
 
     const page = await db.collection("pages").findOne({
-      slug: slug,
+      slug: slugStr,
       published: true,
     })
 
