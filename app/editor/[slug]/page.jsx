@@ -9,50 +9,64 @@ export default function EditorPage() {
   const [page, setPage] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const { slug } = useParams()
+  const params = useParams()
   const router = useRouter()
 
   useEffect(() => {
     const fetchPage = async () => {
       try {
+        // Ensure params is available and get slug
+        if (!params || !params.slug) {
+          console.log("[v0] Slug not available yet")
+          return
+        }
+
+        const slug = params.slug
+        console.log("[v0] Loading page with slug:", slug)
+
         const token = authStorage.getToken()
+        console.log("[v0] Token exists:", !!token)
+
         if (!token) {
           setError("Not authenticated")
           router.push("/login")
           return
         }
 
-        const response = await fetch(`/api/pages/slug/${slug}`, {
+        const url = `/api/pages/slug/${slug}`
+        console.log("[v0] Fetching from:", url)
+
+        const response = await fetch(url, {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         })
 
-        console.log("[v0] Fetch page response status:", response.status)
+        console.log("[v0] Fetch response status:", response.status)
+        console.log("[v0] Response URL:", response.url)
 
         if (response.ok) {
           const data = await response.json()
-          console.log("[v0] Page loaded:", data.page)
+          console.log("[v0] Page loaded successfully:", data.page)
           setPage(data.page)
         } else {
-          const errorData = await response.json()
-          console.log("[v0] Error response:", errorData)
-          setError(errorData.error || "Failed to load page")
-          router.push("/dashboard/pages")
+          const errorData = await response.json().catch(() => ({}))
+          console.log("[v0] Error response:", response.status, errorData)
+          setError(errorData.error || `Failed to load page (${response.status})`)
+          setTimeout(() => router.push("/dashboard/pages"), 2000)
         }
       } catch (error) {
         console.error("[v0] Error fetching page:", error)
-        setError("Error fetching page")
-        router.push("/dashboard/pages")
+        setError("Error fetching page: " + error.message)
       } finally {
         setIsLoading(false)
       }
     }
 
-    if (slug) {
-      fetchPage()
-    }
-  }, [slug, router])
+    fetchPage()
+  }, [params, router])
 
   if (isLoading) {
     return (
@@ -65,13 +79,33 @@ export default function EditorPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-600">Error: {error}</div>
+        <div className="text-center">
+          <div className="text-red-600 text-lg font-semibold mb-4">Error: {error}</div>
+          <button
+            onClick={() => (window.location.href = "/dashboard/pages")}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Back to Pages
+          </button>
+        </div>
       </div>
     )
   }
 
   if (!page) {
-    return <div>Page not found</div>
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="text-muted-foreground text-lg mb-4">No page data available</div>
+          <button
+            onClick={() => (window.location.href = "/dashboard/pages")}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Back to Pages
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return <PageEditor initialPage={page} />

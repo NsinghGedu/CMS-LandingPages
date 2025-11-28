@@ -8,24 +8,36 @@ import { PageRenderer } from "@/components/page-renderer"
 export default function PreviewPage() {
   const [page, setPage] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   const { slug } = useParams()
 
   useEffect(() => {
     const fetchPage = async () => {
       try {
-        const response = await fetch(`/api/pages/slug/${slug}`)
+        console.log("[v0] Fetching preview page with slug:", slug)
+        const response = await fetch(`/api/pages/preview/${slug}`)
+        console.log("[v0] Preview response status:", response.status)
+
         if (response.ok) {
           const data = await response.json()
+          console.log("[v0] Page data received:", !!data.page)
           setPage(data.page)
+        } else {
+          const errorData = await response.json()
+          console.log("[v0] Preview error:", errorData)
+          setError("Failed to load page")
         }
       } catch (error) {
-        console.error("Error fetching page:", error)
+        console.error("[v0] Error fetching page:", error)
+        setError(error.message)
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchPage()
+    if (slug) {
+      fetchPage()
+    }
   }, [slug])
 
   if (isLoading) {
@@ -40,7 +52,7 @@ export default function PreviewPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Page not found</p>
+          <p className="text-muted-foreground mb-4">{error || "Page not found"}</p>
           <Link href="/dashboard" className="text-primary hover:underline">
             Back to Dashboard
           </Link>
