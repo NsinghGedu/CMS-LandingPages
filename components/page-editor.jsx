@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { authStorage } from "@/lib/storage"
-import { EditorToolbar } from "./editor-toolbar"
+import { ComponentLibraryModal } from "./component-library-modal"
+import { EditorHeader } from "./editor-header"
+import { ComponentPropertiesPanel } from "./component-properties-panel"
 import { EditablePod } from "./editable-pod"
-import { StylePanel } from "./style-panel"
 
 import { HeadingEditor } from "./editors/heading-editor"
 import { TextEditor } from "./editors/text-editor"
@@ -30,6 +30,7 @@ export function PageEditor({ initialPage }) {
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
   const [selectedComponentId, setSelectedComponentId] = useState(null)
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false)
 
   const addComponent = (type) => {
     const newComponent = {
@@ -130,94 +131,69 @@ export function PageEditor({ initialPage }) {
     }
   }
 
+  const selectedComponent = components.find((c) => c.id === selectedComponentId)
+
   return (
     <div className="flex h-screen bg-background">
-      {/* Left Sidebar */}
-      <div className="w-64 border-r border-border overflow-y-auto flex flex-col">
-        <EditorToolbar onAddComponent={addComponent} />
-        <div className="flex-1 p-4">
-          {selectedComponentId && components.find((c) => c.id === selectedComponentId) && (
-            <StylePanel component={components.find((c) => c.id === selectedComponentId)} onUpdate={updateComponent} />
-          )}
-        </div>
-      </div>
+      <ComponentLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onSelectComponent={addComponent}
+      />
 
-      {/* Main Editor */}
+      {/* Main Layout */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{page.title}</h1>
-            <p className="text-sm text-muted-foreground">{page.description}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {saveStatus && <span className="text-sm text-green-600 dark:text-green-400">{saveStatus}</span>}
-            <Link
-              href={`/preview/${page.slug}`}
-              target="_blank"
-              className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 font-medium"
-            >
-              Preview
-            </Link>
-            <button
-              onClick={publishPage}
-              disabled={isSaving || page.published}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 font-medium"
-            >
-              {page.published ? "Published" : "Publish"}
-            </button>
-            <button
-              onClick={savePage}
-              disabled={isSaving}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 font-medium"
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </button>
-            <Link
-              href="/dashboard/pages"
-              className="px-4 py-2 bg-muted text-muted-foreground rounded-md hover:bg-muted/80 font-medium"
-            >
-              Back
-            </Link>
-          </div>
-        </div>
+        <EditorHeader
+          page={page}
+          isSaving={isSaving}
+          saveStatus={saveStatus}
+          onSave={savePage}
+          onPublish={publishPage}
+          onAddComponent={() => setIsLibraryOpen(true)}
+        />
 
-        {/* Canvas */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl mx-auto">
-            {components.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>No components yet. Add one from the toolbar to get started.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {components.map((component) => (
-                  <div
-                    key={component.id}
-                    onClick={() => setSelectedComponentId(component.id)}
-                    className={`rounded-lg transition-all ${
-                      selectedComponentId === component.id ? "ring-2 ring-primary" : ""
-                    }`}
+        {/* Content Area */}
+        <div className="flex-1 flex">
+          {/* Canvas */}
+          <div className="flex-1 overflow-y-auto p-8 bg-muted/30">
+            <div className="max-w-4xl mx-auto">
+              {components.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">No components yet</p>
+                  <button
+                    onClick={() => setIsLibraryOpen(true)}
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90"
                   >
-                    <ComponentRenderer
+                    + Add Component
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {components.map((component) => (
+                    <ComponentPreview
+                      key={component.id}
                       component={component}
+                      isSelected={selectedComponentId === component.id}
+                      onSelect={() => setSelectedComponentId(component.id)}
                       onUpdate={updateComponent}
                       onDelete={deleteComponent}
-                      isSelected={selectedComponentId === component.id}
-                      setSelectedComponentId={setSelectedComponentId} // Added setSelectedComponentId here
                     />
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {/* Properties Panel */}
+          <ComponentPropertiesPanel component={selectedComponent} onUpdate={updateComponent} />
         </div>
       </div>
     </div>
   )
 }
 
-function ComponentRenderer({ component, onUpdate, onDelete, isSelected, setSelectedComponentId }) {
+function ComponentPreview({ component, isSelected, onSelect, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState(component.data)
 
@@ -233,9 +209,9 @@ function ComponentRenderer({ component, onUpdate, onDelete, isSelected, setSelec
     return <EditablePod component={component} onUpdate={onUpdate} onDelete={onDelete} />
   }
 
-  if (isSelected && isEditing) {
+  if (isEditing) {
     return (
-      <div className="border-2 border-primary p-4 bg-background rounded-lg mb-4">
+      <div className="border-2 border-primary p-4 bg-card rounded-lg">
         {component.type === "heading" && <HeadingEditor editData={editData} setEditData={setEditData} />}
         {component.type === "text" && <TextEditor editData={editData} setEditData={setEditData} />}
         {component.type === "image" && <ImageEditor editData={editData} setEditData={setEditData} />}
@@ -262,28 +238,38 @@ function ComponentRenderer({ component, onUpdate, onDelete, isSelected, setSelec
   }
 
   return (
-    <div className="border-2 border-border p-4 bg-card rounded-lg group hover:border-primary transition-colors">
-      {component.type === "heading" && <HeadingRenderer editData={editData} />}
-      {component.type === "text" && <TextRenderer editData={editData} />}
-      {component.type === "image" && <ImageRenderer editData={editData} />}
-      {component.type === "video" && <VideoRenderer editData={editData} />}
-      {component.type === "youtube" && <YouTubeRenderer editData={editData} />}
-      {component.type === "split" && <SplitRenderer editData={editData} />}
-      {component.type === "banner" && <BannerRenderer editData={editData} />}
+    <div
+      onClick={onSelect}
+      className={`bg-card border-2 rounded-lg p-4 cursor-pointer transition-all group ${
+        isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
+      }`}
+    >
+      <div className="mb-3">
+        {component.type === "heading" && <HeadingRenderer editData={editData} />}
+        {component.type === "text" && <TextRenderer editData={editData} />}
+        {component.type === "image" && <ImageRenderer editData={editData} />}
+        {component.type === "video" && <VideoRenderer editData={editData} />}
+        {component.type === "youtube" && <YouTubeRenderer editData={editData} />}
+        {component.type === "split" && <SplitRenderer editData={editData} />}
+        {component.type === "banner" && <BannerRenderer editData={editData} />}
+      </div>
 
-      <div className="flex gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
-          onClick={() => setIsEditing(true)}
-          className="px-3 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
+          onClick={(e) => {
+            e.stopPropagation()
+            setIsEditing(true)
+          }}
+          className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Edit
         </button>
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation()
             onDelete(component.id)
-            setSelectedComponentId(null)
           }}
-          className="px-3 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20"
+          className="px-3 py-1 text-xs bg-red-600/10 text-red-600 rounded hover:bg-red-600/20"
         >
           Delete
         </button>
