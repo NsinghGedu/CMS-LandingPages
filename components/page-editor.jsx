@@ -5,8 +5,22 @@ import Link from "next/link"
 import { authStorage } from "@/lib/storage"
 import { EditorToolbar } from "./editor-toolbar"
 import { EditablePod } from "./editable-pod"
-import { BannerComponent } from "./banner-component"
 import { StylePanel } from "./style-panel"
+
+import { HeadingEditor } from "./editors/heading-editor"
+import { TextEditor } from "./editors/text-editor"
+import { ImageEditor } from "./editors/image-editor"
+import { VideoEditor } from "./editors/video-editor"
+import { YouTubeEditor } from "./editors/youtube-editor"
+import { SplitEditor } from "./editors/split-editor"
+
+import { HeadingRenderer } from "./renderers/heading-renderer"
+import { TextRenderer } from "./renderers/text-renderer"
+import { ImageRenderer } from "./renderers/image-renderer"
+import { VideoRenderer } from "./renderers/video-renderer"
+import { YouTubeRenderer } from "./renderers/youtube-renderer"
+import { SplitRenderer } from "./renderers/split-renderer"
+import { BannerRenderer } from "./renderers/banner-renderer"
 
 const generateId = () => `comp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
@@ -214,127 +228,19 @@ function ComponentRenderer({ component, onUpdate, onDelete, isSelected }) {
     setIsEditing(false)
   }
 
-  if (component.type === "banner") {
-    return <BannerComponent component={component} onUpdate={onUpdate} onDelete={onDelete} />
-  }
-
   if (component.type === "pod") {
     return <EditablePod component={component} onUpdate={onUpdate} onDelete={onDelete} />
   }
 
-  if (isSelected) {
+  if (isSelected && isEditing) {
     return (
       <div className="border-2 border-primary p-4 bg-background rounded-lg mb-4">
-        {component.type === "heading" && (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold mb-1">Heading Level</label>
-              <select
-                value={editData.level}
-                onChange={(e) => setEditData({ ...editData, level: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-              >
-                <option value="h1">H1</option>
-                <option value="h2">H2</option>
-                <option value="h3">H3</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold mb-1">Text</label>
-              <input
-                type="text"
-                value={editData.text}
-                onChange={(e) => setEditData({ ...editData, text: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-              />
-            </div>
-          </div>
-        )}
-
-        {component.type === "text" && (
-          <div>
-            <label className="block text-xs font-bold mb-1">Content</label>
-            <textarea
-              value={editData.content}
-              onChange={(e) => setEditData({ ...editData, content: e.target.value })}
-              className="w-full px-2 py-1 border border-input rounded text-sm"
-              rows="4"
-            />
-          </div>
-        )}
-
-        {component.type === "image" && (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold mb-1">Image URL</label>
-              <input
-                type="text"
-                value={editData.url}
-                onChange={(e) => setEditData({ ...editData, url: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold mb-1">Alt Text</label>
-              <input
-                type="text"
-                value={editData.alt}
-                onChange={(e) => setEditData({ ...editData, alt: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-              />
-            </div>
-          </div>
-        )}
-
-        {component.type === "video" && (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold mb-1">Video URL</label>
-              <input
-                type="text"
-                value={editData.url}
-                onChange={(e) => setEditData({ ...editData, url: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-              />
-            </div>
-          </div>
-        )}
-
-        {component.type === "youtube" && (
-          <div>
-            <label className="block text-xs font-bold mb-1">YouTube Video ID</label>
-            <input
-              type="text"
-              value={editData.videoId}
-              onChange={(e) => setEditData({ ...editData, videoId: e.target.value })}
-              className="w-full px-2 py-1 border border-input rounded text-sm"
-              placeholder="dQw4w9WgXcQ"
-            />
-          </div>
-        )}
-
-        {component.type === "split" && (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-bold mb-1">Left Content</label>
-              <textarea
-                value={editData.leftContent}
-                onChange={(e) => setEditData({ ...editData, leftContent: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-                rows="2"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold mb-1">Right Content</label>
-              <textarea
-                value={editData.rightContent}
-                onChange={(e) => setEditData({ ...editData, rightContent: e.target.value })}
-                className="w-full px-2 py-1 border border-input rounded text-sm"
-                rows="2"
-              />
-            </div>
-          </div>
-        )}
+        {component.type === "heading" && <HeadingEditor editData={editData} setEditData={setEditData} />}
+        {component.type === "text" && <TextEditor editData={editData} setEditData={setEditData} />}
+        {component.type === "image" && <ImageEditor editData={editData} setEditData={setEditData} />}
+        {component.type === "video" && <VideoEditor editData={editData} setEditData={setEditData} />}
+        {component.type === "youtube" && <YouTubeEditor editData={editData} setEditData={setEditData} />}
+        {component.type === "split" && <SplitEditor editData={editData} setEditData={setEditData} />}
 
         <div className="flex gap-2 mt-3">
           <button
@@ -356,59 +262,13 @@ function ComponentRenderer({ component, onUpdate, onDelete, isSelected }) {
 
   return (
     <div className="border-2 border-border p-4 bg-card rounded-lg group hover:border-primary transition-colors">
-      {component.type === "heading" && (
-        <div
-          className={`font-bold text-${editData.level === "h1" ? "3xl" : editData.level === "h2" ? "2xl" : "xl"} text-foreground`}
-        >
-          {editData.text}
-        </div>
-      )}
-
-      {component.type === "text" && <p className="text-foreground whitespace-pre-wrap">{editData.content}</p>}
-
-      {component.type === "image" && editData.url && (
-        <img
-          src={editData.url || "/placeholder.svg"}
-          alt={editData.alt}
-          className="w-full rounded-md max-h-96 object-cover"
-          onError={(e) => {
-            e.target.style.display = "none"
-          }}
-        />
-      )}
-
-      {component.type === "video" && editData.url && (
-        <video src={editData.url} controls className="w-full rounded-md max-h-96" />
-      )}
-
-      {component.type === "youtube" && editData.videoId && (
-        <iframe
-          width="100%"
-          height="400"
-          src={`https://www.youtube.com/embed/${editData.videoId}`}
-          title="YouTube video"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="rounded-md"
-        />
-      )}
-
-      {component.type === "split" && (
-        <div className="grid grid-cols-2 gap-4">
-          <div className="text-foreground">{editData.leftContent}</div>
-          <div className="text-foreground">{editData.rightContent}</div>
-        </div>
-      )}
-
-      {component.type === "banner" && (
-        <div
-          style={{ height: `${editData.height}px`, backgroundColor: editData.bgColor, color: editData.textColor }}
-          className="p-4 text-center"
-        >
-          {editData.text}
-        </div>
-      )}
+      {component.type === "heading" && <HeadingRenderer editData={editData} />}
+      {component.type === "text" && <TextRenderer editData={editData} />}
+      {component.type === "image" && <ImageRenderer editData={editData} />}
+      {component.type === "video" && <VideoRenderer editData={editData} />}
+      {component.type === "youtube" && <YouTubeRenderer editData={editData} />}
+      {component.type === "split" && <SplitRenderer editData={editData} />}
+      {component.type === "banner" && <BannerRenderer editData={editData} />}
 
       <div className="flex gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
         <button

@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
+
 export function BannerComponent({ component, onUpdate, onDelete }) {
   const data = component.data
-  const [isEditing, setIsEditing] = require("react").useState(false)
-  const [editData, setEditData] = require("react").useState(data)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editData, setEditData] = useState(data)
 
   const handleSave = () => {
     onUpdate({
