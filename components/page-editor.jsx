@@ -5,6 +5,8 @@ import Link from "next/link"
 import { authStorage } from "@/lib/storage"
 import { EditorToolbar } from "./editor-toolbar"
 import { EditablePod } from "./editable-pod"
+import { BannerComponent } from "./banner-component"
+import { StylePanel } from "./style-panel"
 
 const generateId = () => `comp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
@@ -13,6 +15,7 @@ export function PageEditor({ initialPage }) {
   const [components, setComponents] = useState(initialPage?.components || [])
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
+  const [selectedComponentId, setSelectedComponentId] = useState(null)
 
   const addComponent = (type) => {
     const newComponent = {
@@ -21,17 +24,19 @@ export function PageEditor({ initialPage }) {
       data: getDefaultData(type),
     }
     setComponents([...components, newComponent])
+    setSelectedComponentId(newComponent.id)
   }
 
   const getDefaultData = (type) => {
     const defaults = {
-      heading: { text: "New Heading", level: "h1" },
-      text: { content: "Add your rich text content here..." },
-      image: { url: "", alt: "Image" },
-      video: { url: "", title: "Video" },
-      youtube: { videoId: "", title: "YouTube Video" },
-      pod: { title: "", heading: "", description: "", imageUrl: "" },
-      split: { leftContent: "", rightContent: "" },
+      heading: { text: "New Heading", level: "h1", style: {} },
+      text: { content: "Add your rich text content here...", style: {} },
+      image: { url: "", alt: "Image", style: {} },
+      video: { url: "", title: "Video", style: {} },
+      youtube: { videoId: "", title: "YouTube Video", style: {} },
+      pod: { title: "", heading: "", description: "", imageUrl: "", style: {} },
+      split: { leftContent: "", rightContent: "", style: {} },
+      banner: { text: "Welcome to our site", height: 200, bgColor: "#3b82f6", textColor: "#ffffff", style: {} },
     }
     return defaults[type] || {}
   }
@@ -42,6 +47,7 @@ export function PageEditor({ initialPage }) {
 
   const deleteComponent = (componentId) => {
     setComponents(components.filter((comp) => comp.id !== componentId))
+    setSelectedComponentId(null)
   }
 
   const savePage = async () => {
@@ -112,9 +118,14 @@ export function PageEditor({ initialPage }) {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Left Sidebar - Toolbar */}
-      <div className="w-64 border-r border-border overflow-y-auto">
+      {/* Left Sidebar */}
+      <div className="w-64 border-r border-border overflow-y-auto flex flex-col">
         <EditorToolbar onAddComponent={addComponent} />
+        <div className="flex-1 p-4">
+          {selectedComponentId && (
+            <StylePanel component={components.find((c) => c.id === selectedComponentId)} onUpdate={updateComponent} />
+          )}
+        </div>
       </div>
 
       {/* Main Editor */}
@@ -167,12 +178,20 @@ export function PageEditor({ initialPage }) {
             ) : (
               <div className="space-y-4">
                 {components.map((component) => (
-                  <ComponentRenderer
+                  <div
                     key={component.id}
-                    component={component}
-                    onUpdate={updateComponent}
-                    onDelete={deleteComponent}
-                  />
+                    onClick={() => setSelectedComponentId(component.id)}
+                    className={`rounded-lg transition-all ${
+                      selectedComponentId === component.id ? "ring-2 ring-primary" : ""
+                    }`}
+                  >
+                    <ComponentRenderer
+                      component={component}
+                      onUpdate={updateComponent}
+                      onDelete={deleteComponent}
+                      isSelected={selectedComponentId === component.id}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -183,7 +202,7 @@ export function PageEditor({ initialPage }) {
   )
 }
 
-function ComponentRenderer({ component, onUpdate, onDelete }) {
+function ComponentRenderer({ component, onUpdate, onDelete, isSelected }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState(component.data)
 
@@ -195,11 +214,15 @@ function ComponentRenderer({ component, onUpdate, onDelete }) {
     setIsEditing(false)
   }
 
+  if (component.type === "banner") {
+    return <BannerComponent component={component} onUpdate={onUpdate} onDelete={onDelete} />
+  }
+
   if (component.type === "pod") {
     return <EditablePod component={component} onUpdate={onUpdate} onDelete={onDelete} />
   }
 
-  if (isEditing) {
+  if (isSelected) {
     return (
       <div className="border-2 border-primary p-4 bg-background rounded-lg mb-4">
         {component.type === "heading" && (
@@ -375,6 +398,15 @@ function ComponentRenderer({ component, onUpdate, onDelete }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="text-foreground">{editData.leftContent}</div>
           <div className="text-foreground">{editData.rightContent}</div>
+        </div>
+      )}
+
+      {component.type === "banner" && (
+        <div
+          style={{ height: `${editData.height}px`, backgroundColor: editData.bgColor, color: editData.textColor }}
+          className="p-4 text-center"
+        >
+          {editData.text}
         </div>
       )}
 
