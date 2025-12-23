@@ -40,9 +40,8 @@ export default function DashboardLayout({ children }) {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside
-        className={`${
-          isSidebarOpen ? "w-64" : "w-20"
-        } bg-sidebar border-r border-sidebar-border transition-all duration-300 overflow-y-auto`}
+        className={`${isSidebarOpen ? "w-64" : "w-20"
+          } bg-sidebar border-r border-sidebar-border transition-all duration-300 overflow-y-auto`}
       >
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
@@ -84,8 +83,7 @@ export default function DashboardLayout({ children }) {
               <p className="text-xs text-sidebar-muted-foreground">{user?.email}</p>
               <button
                 onClick={handleLogout}
-                className="w-full mt-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-              >
+                className="w-1/3 mx-auto mt-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center justify-center">
                 Logout
               </button>
             </div>

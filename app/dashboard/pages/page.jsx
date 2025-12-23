@@ -10,6 +10,7 @@ export default function PagesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showNewPageForm, setShowNewPageForm] = useState(false)
   const [newPageTitle, setNewPageTitle] = useState("")
+  const [newPageSubTitle, setNewPageSubTitle] = useState("")
   const [newPageDescription, setNewPageDescription] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const router = useRouter()
@@ -56,6 +57,7 @@ export default function PagesPage() {
         },
         body: JSON.stringify({
           title: newPageTitle,
+          subtitle: newPageSubTitle,
           description: newPageDescription,
         }),
       })
@@ -126,6 +128,18 @@ export default function PagesPage() {
                 value={newPageTitle}
                 onChange={(e) => setNewPageTitle(e.target.value)}
                 placeholder="My Awesome Page"
+                className="w-full px-4 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Page Sub Titile</label>
+              <input
+                type="text"
+                value={newPageSubTitle}
+                onChange={(e) => setNewPageSubTitle(e.target.value)}
+                placeholder="My Awesome Page Subtitle"
                 className="w-full px-4 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 required
               />
