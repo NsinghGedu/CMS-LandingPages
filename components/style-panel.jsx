@@ -1,6 +1,14 @@
 "use client"
 
 export function StylePanel({ component, onUpdate }) {
+  if (!component || !component.data) {
+    return (
+      <div className="bg-card border border-border p-4 rounded-lg">
+        <p className="text-xs text-muted-foreground">Select a component to edit styles</p>
+      </div>
+    )
+  }
+
   const data = component.data
 
   const handleStyleChange = (key, value) => {

@@ -136,7 +136,7 @@ export function PageEditor({ initialPage }) {
       <div className="w-64 border-r border-border overflow-y-auto flex flex-col">
         <EditorToolbar onAddComponent={addComponent} />
         <div className="flex-1 p-4">
-          {selectedComponentId && (
+          {selectedComponentId && components.find((c) => c.id === selectedComponentId) && (
             <StylePanel component={components.find((c) => c.id === selectedComponentId)} onUpdate={updateComponent} />
           )}
         </div>
@@ -204,6 +204,7 @@ export function PageEditor({ initialPage }) {
                       onUpdate={updateComponent}
                       onDelete={deleteComponent}
                       isSelected={selectedComponentId === component.id}
+                      setSelectedComponentId={setSelectedComponentId} // Added setSelectedComponentId here
                     />
                   </div>
                 ))}
@@ -216,7 +217,7 @@ export function PageEditor({ initialPage }) {
   )
 }
 
-function ComponentRenderer({ component, onUpdate, onDelete, isSelected }) {
+function ComponentRenderer({ component, onUpdate, onDelete, isSelected, setSelectedComponentId }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState(component.data)
 
@@ -278,7 +279,10 @@ function ComponentRenderer({ component, onUpdate, onDelete, isSelected }) {
           Edit
         </button>
         <button
-          onClick={() => onDelete(component.id)}
+          onClick={() => {
+            onDelete(component.id)
+            setSelectedComponentId(null)
+          }}
           className="px-3 py-1 text-xs bg-destructive/10 text-destructive rounded hover:bg-destructive/20"
         >
           Delete
