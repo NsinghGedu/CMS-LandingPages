@@ -7,13 +7,6 @@ import { EditorHeader } from "./editor-header"
 import { ComponentPropertiesPanel } from "./component-properties-panel"
 import { EditablePod } from "./editable-pod"
 
-import { HeadingEditor } from "./editors/heading-editor"
-import { TextEditor } from "./editors/text-editor"
-import { ImageEditor } from "./editors/image-editor"
-import { VideoEditor } from "./editors/video-editor"
-import { YouTubeEditor } from "./editors/youtube-editor"
-import { SplitEditor } from "./editors/split-editor"
-
 import { HeadingRenderer } from "./renderers/heading-renderer"
 import { TextRenderer } from "./renderers/text-renderer"
 import { ImageRenderer } from "./renderers/image-renderer"
@@ -153,9 +146,8 @@ export function PageEditor({ initialPage }) {
           onAddComponent={() => setIsLibraryOpen(true)}
         />
 
-        {/* Content Area */}
-        <div className="flex-1 flex">
-          {/* Canvas */}
+        {/* Content Area - Canvas + Properties */}
+        <div className="flex-1 flex overflow-hidden">
           <div className="flex-1 overflow-y-auto p-8 bg-muted/30">
             <div className="max-w-4xl mx-auto">
               {components.length === 0 ? (
@@ -171,12 +163,11 @@ export function PageEditor({ initialPage }) {
               ) : (
                 <div className="space-y-4">
                   {components.map((component) => (
-                    <ComponentPreview
+                    <ComponentCard
                       key={component.id}
                       component={component}
                       isSelected={selectedComponentId === component.id}
                       onSelect={() => setSelectedComponentId(component.id)}
-                      onUpdate={updateComponent}
                       onDelete={deleteComponent}
                     />
                   ))}
@@ -185,82 +176,55 @@ export function PageEditor({ initialPage }) {
             </div>
           </div>
 
-          {/* Properties Panel */}
-          <ComponentPropertiesPanel component={selectedComponent} onUpdate={updateComponent} />
+          {selectedComponent ? (
+            <div className="w-96 border-l border-border bg-card overflow-y-auto">
+              <ComponentPropertiesPanel
+                component={selectedComponent}
+                onUpdate={updateComponent}
+                isSaving={isSaving}
+                onSave={savePage}
+              />
+            </div>
+          ) : (
+            <div className="w-96 border-l border-border bg-card flex items-center justify-center">
+              <p className="text-center text-sm text-muted-foreground px-4">
+                Select a component to edit its properties
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-function ComponentPreview({ component, isSelected, onSelect, onUpdate, onDelete }) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editData, setEditData] = useState(component.data)
-
-  const handleSave = () => {
-    onUpdate({
-      ...component,
-      data: editData,
-    })
-    setIsEditing(false)
-  }
-
-  if (component.type === "pod") {
-    return <EditablePod component={component} onUpdate={onUpdate} onDelete={onDelete} />
-  }
-
-  if (isEditing) {
-    return (
-      <div className="border-2 border-primary p-4 bg-card rounded-lg">
-        {component.type === "heading" && <HeadingEditor editData={editData} setEditData={setEditData} />}
-        {component.type === "text" && <TextEditor editData={editData} setEditData={setEditData} />}
-        {component.type === "image" && <ImageEditor editData={editData} setEditData={setEditData} />}
-        {component.type === "video" && <VideoEditor editData={editData} setEditData={setEditData} />}
-        {component.type === "youtube" && <YouTubeEditor editData={editData} setEditData={setEditData} />}
-        {component.type === "split" && <SplitEditor editData={editData} setEditData={setEditData} />}
-
-        <div className="flex gap-2 mt-3">
-          <button
-            onClick={handleSave}
-            className="px-3 py-1 bg-primary text-primary-foreground text-xs rounded font-medium hover:bg-primary/90"
-          >
-            Save
-          </button>
-          <button
-            onClick={() => setIsEditing(false)}
-            className="px-3 py-1 bg-muted text-muted-foreground text-xs rounded font-medium hover:bg-muted/80"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )
-  }
-
+function ComponentCard({ component, isSelected, onSelect, onDelete }) {
   return (
     <div
       onClick={onSelect}
-      className={`bg-card border-2 rounded-lg p-4 cursor-pointer transition-all group ${
+      className={`bg-card border-2 rounded-lg p-6 cursor-pointer transition-all group ${
         isSelected ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-primary/50"
       }`}
     >
-      <div className="mb-3">
-        {component.type === "heading" && <HeadingRenderer editData={editData} />}
-        {component.type === "text" && <TextRenderer editData={editData} />}
-        {component.type === "image" && <ImageRenderer editData={editData} />}
-        {component.type === "video" && <VideoRenderer editData={editData} />}
-        {component.type === "youtube" && <YouTubeRenderer editData={editData} />}
-        {component.type === "split" && <SplitRenderer editData={editData} />}
-        {component.type === "banner" && <BannerRenderer editData={editData} />}
+      {/* Component Preview */}
+      <div className="mb-4">
+        {component.type === "heading" && <HeadingRenderer editData={component.data} />}
+        {component.type === "text" && <TextRenderer editData={component.data} />}
+        {component.type === "image" && <ImageRenderer editData={component.data} />}
+        {component.type === "video" && <VideoRenderer editData={component.data} />}
+        {component.type === "youtube" && <YouTubeRenderer editData={component.data} />}
+        {component.type === "split" && <SplitRenderer editData={component.data} />}
+        {component.type === "banner" && <BannerRenderer editData={component.data} />}
+        {component.type === "pod" && <EditablePod component={component} />}
       </div>
 
-      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Action Buttons - only Edit and Delete, no Save/Cancel */}
+      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity pt-2 border-t border-border">
         <button
           onClick={(e) => {
             e.stopPropagation()
-            setIsEditing(true)
           }}
-          className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 font-medium"
         >
           Edit
         </button>
@@ -269,7 +233,7 @@ function ComponentPreview({ component, isSelected, onSelect, onUpdate, onDelete 
             e.stopPropagation()
             onDelete(component.id)
           }}
-          className="px-3 py-1 text-xs bg-red-600/10 text-red-600 rounded hover:bg-red-600/20"
+          className="flex-1 px-3 py-1.5 text-xs bg-red-600/10 text-red-600 rounded hover:bg-red-600/20 font-medium"
         >
           Delete
         </button>
