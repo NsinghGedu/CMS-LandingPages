@@ -8,6 +8,7 @@ const componentTypes = [
   { type: "youtube", icon: "▶️", label: "YouTube" },
   { type: "pod", icon: "📦", label: "Pod" },
   { type: "split", icon: "⬌", label: "Split" },
+  { type: "banner", icon: "📢", label: "Banner" },
 ]
 
 export function EditorToolbar({ onAddComponent }) {
